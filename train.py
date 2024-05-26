@@ -46,8 +46,8 @@ def train():
     test_preds = model.predict(test_df)
     # create_submission(predictions=test_preds, test_set=test_dataset)
 
-    BATCH_SIZE = 64
-    TOTAL_EPOCHS = 1
+    BATCH_SIZE = 128
+    TOTAL_EPOCHS = 10
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     trainer = Trainer(
                     device=DEVICE,

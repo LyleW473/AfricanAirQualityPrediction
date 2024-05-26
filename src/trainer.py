@@ -1,4 +1,5 @@
 import torch
+import os
 from .model import Model
 
 class Trainer():
@@ -113,4 +114,23 @@ class Trainer():
             val_rmse_loss_running = val_mse_loss_running ** 0.5
 
             print(f"Epoch: {epoch + 1}/{total_epochs} | T_MSE: {train_mse_loss_running} | T_RMSE: {train_rmse_loss_running} | V_MSE: {val_mse_loss_running} | V_RMSE: {val_rmse_loss_running}")
-            
+        
+        self.save_model(train_losses, val_losses)
+
+    def save_model(self, train_losses, val_losses):
+
+        checkpoint = {
+                    "model": {
+                            "model_state_dict": self.model.state_dict(),
+                            "optimiser_state_dict": self.optimiser.state_dict()
+                            },
+                    "stats":
+                            {
+                            "train_losses": train_losses,
+                            "val_losses": val_losses
+                            }
+                    }
+        if not os.path.exists("model_checkpoints"):
+            os.makedirs("model_checkpoints")
+        model_number = len(os.listdir("model_checkpoints"))
+        torch.save(checkpoint, f"model_checkpoints/model_{model_number}.pt")
