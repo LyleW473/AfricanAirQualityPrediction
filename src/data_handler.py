@@ -97,7 +97,13 @@ class DataHandler:
 
         return X_train, X_val, Y_train, Y_val, test_df
     
-    def convert_data_pt(self, X, Y, device):
-        inputs = torch.tensor(X.values, dtype=torch.float32).to(device)
-        targets = torch.tensor(Y.values, dtype=torch.float32).reshape(-1, 1).to(device)
-        return inputs, targets
+    def get_batches(self, X, Y, batch_size, device):
+        
+        num_features = X.shape[1] # Number of features
+        max_steps = X.shape[0] - (X.shape[0] % batch_size) 
+        X = X[:max_steps]
+        Y = Y[:max_steps]
+        batch_inputs = torch.tensor(X.values, dtype=torch.float32).reshape(-1, batch_size, num_features).to(device)
+        batch_targets = torch.tensor(Y.values, dtype=torch.float32).reshape(-1, batch_size, 1).to(device)
+
+        return batch_inputs, batch_targets

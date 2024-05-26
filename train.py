@@ -46,18 +46,18 @@ def train():
     test_preds = model.predict(test_df)
     # create_submission(predictions=test_preds, test_set=test_dataset)
 
-    BATCH_SIZE = 16
-    TOTAL_EPOCHS = 1000
+    BATCH_SIZE = 64
+    TOTAL_EPOCHS = 1
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     trainer = Trainer(
                     device=DEVICE,
-                    learning_rate=0.01
+                    learning_rate=0.0005
                     )
     print(X_train.shape, Y_train.shape, X_val.shape, Y_val.shape)
 
     # Get data in PyTorch format
-    train_inputs, train_targets = data_handler.convert_data_pt(X=X_train, Y=Y_train, device=trainer.device)
-    val_inputs, val_targets = data_handler.convert_data_pt(X=X_val, Y=Y_val, device=trainer.device)
+    train_inputs, train_targets = data_handler.get_batches(X=X_train, Y=Y_train, device=trainer.device, batch_size=BATCH_SIZE)
+    val_inputs, val_targets = data_handler.get_batches(X=X_val, Y=Y_val, device=trainer.device, batch_size=BATCH_SIZE)
 
     # Train model, validating after each epoch
     trainer.execute(

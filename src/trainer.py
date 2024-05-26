@@ -16,13 +16,13 @@ class Trainer():
 
         running_mse_loss = 0.0
 
-        # Iterate over the batches
-        for i in range(0, all_inputs.shape[0], batch_size):
+        num_batches = all_inputs.shape[0]
+        for i in range(0, num_batches):
 
             self.optimiser.zero_grad()
 
-            batch = all_inputs[i:i+batch_size]
-            targets = all_targets[i:i+batch_size]
+            batch = all_inputs[i]
+            targets = all_targets[i]
 
             preds = self.model(batch)
             loss = torch.nn.functional.mse_loss(preds, targets)
@@ -41,10 +41,11 @@ class Trainer():
 
         running_mse_loss = 0.0
         total_steps = 1
+        num_batches = all_inputs.shape[0]
 
-        for i in range(0, all_inputs.shape[0], batch_size):
-            batch = all_inputs[i:i+batch_size]
-            targets = all_targets[i:i+batch_size]
+        for i in range(0, num_batches):
+            batch = all_inputs[i]
+            targets = all_targets[i]
 
             preds = self.model(batch)
             loss = torch.nn.functional.mse_loss(preds, targets)
@@ -90,14 +91,6 @@ class Trainer():
 
         train_losses = []
         val_losses = []
-
-        # Ensure the batch size is a factor of the total number of samples
-        max_train_steps = train_inputs.shape[0] - (train_inputs.shape[0] % batch_size) 
-        max_val_steps = val_inputs.shape[0] - (val_inputs.shape[0] % batch_size)
-        train_inputs = train_inputs[:max_train_steps]
-        train_targets = train_targets[:max_train_steps]
-        val_inputs = val_inputs[:max_val_steps]
-        val_targets = val_targets[:max_val_steps]
 
         for epoch in range(total_epochs):
             train_running_mse_loss += self.train(
