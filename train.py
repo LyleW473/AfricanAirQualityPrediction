@@ -66,11 +66,10 @@ def train():
                     val_inputs=val_inputs,
                     val_targets=val_targets,
                     total_epochs=TOTAL_EPOCHS,
-                    batch_size=BATCH_SIZE
                     )
     
     # Final evaluation
-    trainer.evaluate(all_inputs=val_inputs, all_targets=val_targets, batch_size=BATCH_SIZE, losses_list = [], verbose=True)
+    trainer.evaluate(all_inputs=val_inputs, all_targets=val_targets, losses_list = [], verbose=True)
 
     test_preds_2 = trainer.get_predictions_for_dataset(test_df, batch_size=BATCH_SIZE)
     print(test_preds.shape, test_preds_2.shape, test_dataset.shape, type(test_preds), type(test_preds_2), type(test_dataset))

@@ -1,6 +1,7 @@
 import torch
 import os
 from .model import Model
+from .config import SAVE_INTERVAL, STATS_TRACK_INTERVAL
 
 class Trainer():
 
@@ -12,7 +13,7 @@ class Trainer():
         self.model = Model().to(device)
         self.optimiser = torch.optim.AdamW(self.model.parameters(), lr=learning_rate)
 
-    def train(self, all_inputs, all_targets, batch_size, losses_list):
+    def train(self, all_inputs, all_targets, losses_list):
         self.model.train()
 
         running_mse_loss = 0.0
@@ -37,7 +38,7 @@ class Trainer():
         return running_mse_loss
 
 
-    def evaluate(self, all_inputs, all_targets, batch_size, losses_list, verbose=False):
+    def evaluate(self, all_inputs, all_targets, losses_list, verbose=False):
         self.model.eval()
 
         running_mse_loss = 0.0
@@ -85,7 +86,7 @@ class Trainer():
         all_preds = torch.cat(all_preds, dim=0).reshape(-1)
         return all_preds.cpu().detach().numpy() # Convert to numpy array for submission
     
-    def execute(self, train_inputs, train_targets, val_inputs, val_targets, total_epochs, batch_size):
+    def execute(self, train_inputs, train_targets, val_inputs, val_targets, total_epochs):
 
         train_running_mse_loss = 0.0
         val_running_mse_loss = 0.0
@@ -97,25 +98,25 @@ class Trainer():
             train_running_mse_loss += self.train(
                                                 all_inputs=train_inputs,
                                                 all_targets=train_targets,
-                                                batch_size=batch_size, 
                                                 losses_list=train_losses
                                                 )
             val_running_mse_loss += self.evaluate(
                                         all_inputs=val_inputs,
                                         all_targets=val_targets,
-                                        batch_size=batch_size,
                                         losses_list=val_losses
                                         )
             
-            # Display stats
-            train_mse_loss_running = train_running_mse_loss / len(train_losses)
-            val_mse_loss_running = val_running_mse_loss / len(val_losses)
-            train_rmse_loss_running = train_mse_loss_running ** 0.5
-            val_rmse_loss_running = val_mse_loss_running ** 0.5
+            if epoch % STATS_TRACK_INTERVAL == 0:
+                # Display stats
+                train_mse_loss_running = train_running_mse_loss / len(train_losses)
+                val_mse_loss_running = val_running_mse_loss / len(val_losses)
+                train_rmse_loss_running = train_mse_loss_running ** 0.5
+                val_rmse_loss_running = val_mse_loss_running ** 0.5
 
-            print(f"Epoch: {epoch + 1}/{total_epochs} | T_MSE: {train_mse_loss_running} | T_RMSE: {train_rmse_loss_running} | V_MSE: {val_mse_loss_running} | V_RMSE: {val_rmse_loss_running}")
-        
-        self.save_model(train_losses, val_losses)
+                print(f"Epoch: {epoch + 1}/{total_epochs} | T_MSE: {train_mse_loss_running} | T_RMSE: {train_rmse_loss_running} | V_MSE: {val_mse_loss_running} | V_RMSE: {val_rmse_loss_running}")
+            
+            if epoch % SAVE_INTERVAL == 0:
+                self.save_model(train_losses, val_losses)
 
     def save_model(self, train_losses, val_losses):
 
