@@ -1,0 +1,40 @@
+{
+  "description": "This is a system generated manifest of files expected to be present in this zip. It can be safely deleted.",
+  "metadata": {
+    "generated_at": "2024-04-04T17:07:53+00:00",
+    "trigger": {
+      "file_hashid": "unknown",
+      "action": "unknown"
+    }
+  },
+  "manifest": [
+    {
+      "filename": "SampleSubmission.csv",
+      "filesize": 44537,
+      "description": "Is an example of what your submission file should look like. The order of the rows does not matter, but the names of the \"ID\" must be correct.",
+      "created_at": "2024-03-15 09:33:37 UTC",
+      "updated_at": "2024-03-15 09:33:48 UTC"
+    },
+    {
+      "filename": "Train.csv",
+      "filesize": 7062267,
+      "description": "Train contains the target. This is the dataset that you will use to train your model.",
+      "created_at": "2024-03-15 09:33:41 UTC",
+      "updated_at": "2024-03-15 09:34:05 UTC"
+    },
+    {
+      "filename": "Test.csv",
+      "filesize": 2695898,
+      "description": "Test resembles Train.csv but without the target-related columns. This is the dataset on which you will apply your model to.",
+      "created_at": "2024-03-15 09:33:40 UTC",
+      "updated_at": "2024-03-15 09:33:58 UTC"
+    },
+    {
+      "filename": "Airqo_starter_notebook.ipynb",
+      "filesize": 465288,
+      "description": "This is a starter notebook to help you make your first submission. ",
+      "created_at": "2024-04-04 17:07:37 UTC",
+      "updated_at": "2024-04-04 17:07:53 UTC"
+    }
+  ]
+}
