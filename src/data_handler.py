@@ -4,15 +4,11 @@ from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split, KFold
 from matplotlib import pyplot as plt
 import seaborn as sns
+from .data_visualiser import DataVisualiser
 
 class DataHandler:
     def __init__(self):
-        # top10_corrs = abs(train_num_df.corr()['pm2_5']).sort_values(ascending = False).head(10)
-        # corr = train_num_df[list(top10_corrs.index)].corr()
-        # sns.heatmap(corr, cmap='RdYlGn', annot = True, center = 0)
-        # plt.title('Correlations between the target and other variables', pad = 15, fontdict={'size': 13})
-        # plt.show()
-        pass
+        self.data_visualiser = DataVisualiser()
 
     def _load_data(self):
         DATA_PATH = Path('')
@@ -37,9 +33,17 @@ class DataHandler:
 
     def get_data(self, test_size, random_state_seed):
 
+        # Load data
         train, test = self._load_data()
-        train_x, train_y, test_df = self._process_data(train=train, test=test)
 
+        # Visualise data
+        corr_matrix = self.data_visualiser.get_correlation_matrix(train_dataset=train.select_dtypes(include=["number"]), top_k=10)
+        self.data_visualiser.plot_correlation_matrix(train_dataset=train, top_k_corrs=corr_matrix)
+
+        # Process data 
+        train_x, train_y, test_df = self._process_data(train=train, test=test)
+    
+        # Split data
         X_train, X_val, Y_train, Y_val = train_test_split(train_x, train_y, test_size=test_size, random_state=random_state_seed)
 
         return X_train, X_val, Y_train, Y_val, test_df
