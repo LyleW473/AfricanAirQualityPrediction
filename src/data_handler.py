@@ -10,7 +10,7 @@ class DataHandler:
     def __init__(self):
         self.data_visualiser = DataVisualiser()
 
-    def _load_data(self):
+    def load_data(self):
         DATA_PATH = Path('')
         train = pd.read_csv(DATA_PATH / 'Train.csv')
         test = pd.read_csv(DATA_PATH / 'Test.csv')
@@ -31,10 +31,7 @@ class DataHandler:
         return X, Y, test_df
 
 
-    def get_data(self, test_size, random_state_seed):
-
-        # Load data
-        train, test = self._load_data()
+    def get_data(self, train, test, test_size, random_state_seed):
 
         # Visualise data
         corr_matrix = self.data_visualiser.get_correlation_matrix(train_dataset=train.select_dtypes(include=["number"]), top_k=10)
