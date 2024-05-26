@@ -17,15 +17,64 @@ class DataHandler:
 
         return train, test
     
+    def transform_columns(self, column):
+
+        column_name = column.name
+        if column_name.endswith("angle"):
+            column = column.apply(lambda x: x / 360)
+        elif column_name == "hour":
+            column = column.apply(lambda x: x / 24)
+        elif column_name == "month":
+            column = column.apply(lambda x: x / 12) 
+        elif column_name == "site_latitude":
+            column = column.apply(lambda x: (x + 90) / 180) # Latitude ranges from -90 to 90
+        elif column_name == "site_longitude":
+            column = column.apply(lambda x: (x + 180) / 360) # Longitude ranges from -180 to 180
+        elif column.name.endswith("index"):
+            pass # Do nothing
+    
+        # Altitude - Check max height of satellite
+        else:
+            # Standardise columns
+            column = self._standardise_column(column, epsilon=0.0)
+            if column.isnull().sum() > 0:
+                column = self._standardise_column(column, epsilon=1e-8) # Use epsilon to avoid division by zero
+            
+            # # Min-Max scale columns
+            # column = self._min_max_scale_column(column, epsilon=0.0)
+            # if column.isnull().sum() > 0:
+            #     column = self._min_max_scale_column(column, epsilon=1e-8) # Use epsilon to avoid division by zero
+
+        return column
+
+    def _standardise_column(self, column, epsilon):
+        mean = column.mean()
+        std = column.std()
+        column = (column - mean) / (std + epsilon)
+        return column
+
+    def _min_max_scale_column(self, column, epsilon):
+        maximum = column.max()
+        minimum = column.min()
+        column = (column - minimum) / ((maximum - minimum)+ epsilon)
+        return column
+
     def _process_data(self, train, test):
 
         # Select only numerical features
         train_num_df = train.select_dtypes(include=['number'])
 
-        # Select X and y features for modelling
+        # Select X and Y features for modelling
         X = train_num_df.drop("pm2_5", axis = 1)
-        Y = train.pm2_5
 
+        # Transform columns
+        X = X.apply(self.transform_columns, axis=0)
+
+        # Replace NaN values,
+        X.fillna(X.mean(), inplace=True)
+
+        # Set targets
+        Y = train.pm2_5
         test_df = test[X.columns]
 
         return X, Y, test_df

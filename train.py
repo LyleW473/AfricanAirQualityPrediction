@@ -7,7 +7,7 @@ from src.train_utils import create_submission
 
 def train():
 
-    random_seed = 2004
+    random_seed = 42
 
     # Load data and get splits
     data_handler = DataHandler()
@@ -15,10 +15,12 @@ def train():
     X_train, X_val, Y_train, Y_val, test_df = data_handler.get_data(
                                                                     train=train_dataset, 
                                                                     test=test_dataset, 
-                                                                    test_size=0.2, 
+                                                                    test_size=0.3, 
                                                                     random_state_seed=random_seed
                                                                     )
-    print(X_train.columns)
+    # for column in X_train.columns:
+    #     print(column)
+    #     print(X_train[column])
 
     # Initialise + train model
     model = LGBMRegressor(
@@ -32,7 +34,7 @@ def train():
                         device="gpu"
                         )
     model.fit(X_train, Y_train)
-    
+
     # Get predictions on validation set
     preds = model.predict(X_val)
     score = root_mean_squared_error(Y_val, preds)
