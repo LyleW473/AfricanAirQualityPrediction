@@ -5,6 +5,7 @@ from sklearn.model_selection import train_test_split, KFold
 from matplotlib import pyplot as plt
 import seaborn as sns
 from .data_visualiser import DataVisualiser
+import torch
 
 class DataHandler:
     def __init__(self):
@@ -78,7 +79,7 @@ class DataHandler:
         test_df = test[X.columns]
         test_df = test_df.apply(self.transform_columns, axis=0)
         test_df.fillna(test_df.mean(), inplace=True) 
-        
+
         return X, Y, test_df
 
 
@@ -88,10 +89,15 @@ class DataHandler:
         corr_matrix = self.data_visualiser.get_correlation_matrix(train_dataset=train.select_dtypes(include=["number"]), top_k=10)
         self.data_visualiser.plot_correlation_matrix(train_dataset=train, top_k_corrs=corr_matrix)
 
-        # Process data 
+        # Process data Ad
         train_x, train_y, test_df = self._process_data(train=train, test=test)
     
         # Split data
         X_train, X_val, Y_train, Y_val = train_test_split(train_x, train_y, test_size=test_size, random_state=random_state_seed)
 
         return X_train, X_val, Y_train, Y_val, test_df
+    
+    def convert_data_pt(self, X, Y, device):
+        inputs = torch.tensor(X.values, dtype=torch.float32).to(device)
+        targets = torch.tensor(Y.values, dtype=torch.float32).reshape(-1, 1).to(device)
+        return inputs, targets

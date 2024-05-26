@@ -46,15 +46,32 @@ def train():
     test_preds = model.predict(test_df)
     # create_submission(predictions=test_preds, test_set=test_dataset)
 
-    BATCH_SIZE = 64
-    TOTAL_EPOCHS = 1
+    BATCH_SIZE = 16
+    TOTAL_EPOCHS = 1000
+    DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     trainer = Trainer(
-                    device=torch.device("cuda" if torch.cuda.is_available() else "cpu"), 
+                    device=DEVICE,
                     learning_rate=0.01
                     )
     print(X_train.shape, Y_train.shape, X_val.shape, Y_val.shape)
-    trainer.train(X_train, Y_train, batch_size=BATCH_SIZE, total_epochs=TOTAL_EPOCHS)
-    trainer.evaluate(X_val, Y_val, batch_size=BATCH_SIZE)
+
+    # Get data in PyTorch format
+    train_inputs, train_targets = data_handler.convert_data_pt(X=X_train, Y=Y_train, device=trainer.device)
+    val_inputs, val_targets = data_handler.convert_data_pt(X=X_val, Y=Y_val, device=trainer.device)
+
+    # Train model, validating after each epoch
+    trainer.execute(
+                    train_inputs=train_inputs,
+                    train_targets=train_targets,
+                    val_inputs=val_inputs,
+                    val_targets=val_targets,
+                    total_epochs=TOTAL_EPOCHS,
+                    batch_size=BATCH_SIZE
+                    )
+    
+    # Final evaluation
+    trainer.evaluate(all_inputs=val_inputs, all_targets=val_targets, batch_size=BATCH_SIZE, losses_list = [], verbose=True)
+
     test_preds_2 = trainer.get_predictions_for_dataset(test_df, batch_size=BATCH_SIZE)
     print(test_preds.shape, test_preds_2.shape, test_dataset.shape, type(test_preds), type(test_preds_2), type(test_dataset))
     create_submission(predictions=test_preds_2, test_set=test_dataset)

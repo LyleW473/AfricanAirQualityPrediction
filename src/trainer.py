@@ -11,57 +11,54 @@ class Trainer():
         self.model = Model().to(device)
         self.optimiser = torch.optim.AdamW(self.model.parameters(), lr=learning_rate)
 
-    def train(self, X_train, Y_train, batch_size, total_epochs):
+    def train(self, all_inputs, all_targets, batch_size, losses_list):
         self.model.train()
 
         running_mse_loss = 0.0
-        batches = torch.tensor(X_train.values, dtype=torch.float32).to(self.device)
-        target_batches = torch.tensor(Y_train.values, dtype=torch.float32).reshape(-1, 1).to(self.device)
-        total_steps = 1
 
-        # Iterate over the epochs
-        for epoch in range(total_epochs):
-            # Iterate over the batches
-            for i in range(0, batches.shape[0] - batch_size, batch_size):
+        # Iterate over the batches
+        for i in range(0, all_inputs.shape[0], batch_size):
 
-                self.optimiser.zero_grad()
+            self.optimiser.zero_grad()
 
-                batch = batches[i:i+batch_size]
-                targets = target_batches[i:i+batch_size]
-
-                preds = self.model(batch)
-                loss = torch.nn.functional.mse_loss(preds, targets)
-                loss.backward()
-                self.optimiser.step()
-                running_mse_loss += loss.item()
-                
-                total_steps += 1
-            
-            mse_loss_running = (running_mse_loss / total_steps)
-            rmse_loss_running = mse_loss_running ** 0.5
-            print(f"Epoch: {epoch + 1}/{total_epochs} | MSELoss: {mse_loss_running} | RMSELoss: {rmse_loss_running}")
-
-
-    def evaluate(self, X_val, Y_val, batch_size):
-        self.model.eval()
-
-        running_mse_loss = 0.0
-        val_batches = torch.tensor(X_val.values, dtype=torch.float32).to(self.device)
-        val_targets = torch.tensor(Y_val.values, dtype=torch.float32).reshape(-1, 1).to(self.device)
-
-        total_steps = 1
-        for i in range(0, val_batches.shape[0] - batch_size, batch_size):
-            batch = val_batches[i:i+batch_size]
-            targets = val_targets[i:i+batch_size]
+            batch = all_inputs[i:i+batch_size]
+            targets = all_targets[i:i+batch_size]
 
             preds = self.model(batch)
             loss = torch.nn.functional.mse_loss(preds, targets)
-            running_mse_loss += loss.item()
+            loss.backward()
+            self.optimiser.step()
 
+            loss_item = loss.item()
+            running_mse_loss += loss_item
+            losses_list.append(loss_item)
+
+        return running_mse_loss
+
+
+    def evaluate(self, all_inputs, all_targets, batch_size, losses_list, verbose=False):
+        self.model.eval()
+
+        running_mse_loss = 0.0
+        total_steps = 1
+
+        for i in range(0, all_inputs.shape[0], batch_size):
+            batch = all_inputs[i:i+batch_size]
+            targets = all_targets[i:i+batch_size]
+
+            preds = self.model(batch)
+            loss = torch.nn.functional.mse_loss(preds, targets)
+
+            loss_item = loss.item()
+            running_mse_loss += loss_item
+            losses_list.append(loss_item)
             total_steps += 1
         
-        rmse_score = (running_mse_loss / total_steps) ** 0.5
-        print(f"Local RMSE (NN): {rmse_score}")
+        if verbose:
+            rmse_score = (running_mse_loss / total_steps) ** 0.5
+            print(f"Local RMSE (NN): {rmse_score}")
+
+        return running_mse_loss
 
     def get_predictions_for_dataset(self, test_df, batch_size):
 
@@ -85,3 +82,42 @@ class Trainer():
         # Concatenate all the predictions
         all_preds = torch.cat(all_preds, dim=0).reshape(-1)
         return all_preds.cpu().detach().numpy() # Convert to numpy array for submission
+    
+    def execute(self, train_inputs, train_targets, val_inputs, val_targets, total_epochs, batch_size):
+
+        train_running_mse_loss = 0.0
+        val_running_mse_loss = 0.0
+
+        train_losses = []
+        val_losses = []
+
+        # Ensure the batch size is a factor of the total number of samples
+        max_train_steps = train_inputs.shape[0] - (train_inputs.shape[0] % batch_size) 
+        max_val_steps = val_inputs.shape[0] - (val_inputs.shape[0] % batch_size)
+        train_inputs = train_inputs[:max_train_steps]
+        train_targets = train_targets[:max_train_steps]
+        val_inputs = val_inputs[:max_val_steps]
+        val_targets = val_targets[:max_val_steps]
+
+        for epoch in range(total_epochs):
+            train_running_mse_loss += self.train(
+                                                all_inputs=train_inputs,
+                                                all_targets=train_targets,
+                                                batch_size=batch_size, 
+                                                losses_list=train_losses
+                                                )
+            val_running_mse_loss += self.evaluate(
+                                        all_inputs=val_inputs,
+                                        all_targets=val_targets,
+                                        batch_size=batch_size,
+                                        losses_list=val_losses
+                                        )
+            
+            # Display stats
+            train_mse_loss_running = train_running_mse_loss / len(train_losses)
+            val_mse_loss_running = val_running_mse_loss / len(val_losses)
+            train_rmse_loss_running = train_mse_loss_running ** 0.5
+            val_rmse_loss_running = val_mse_loss_running ** 0.5
+
+            print(f"Epoch: {epoch + 1}/{total_epochs} | T_MSE: {train_mse_loss_running} | T_RMSE: {train_rmse_loss_running} | V_MSE: {val_mse_loss_running} | V_RMSE: {val_rmse_loss_running}")
+            
