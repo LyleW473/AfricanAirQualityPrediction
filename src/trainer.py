@@ -12,6 +12,7 @@ class Trainer():
         self.optimiser = torch.optim.AdamW(self.model.parameters())
 
     def train(self, X_train, Y_train, batch_size, total_epochs):
+        self.model.train()
 
         running_mse_loss = 0.0
         batches = torch.tensor(X_train.values, dtype=torch.float32).to(self.device)
@@ -39,6 +40,7 @@ class Trainer():
 
 
     def evaluate(self, X_val, Y_val, batch_size):
+        self.model.eval()
 
         running_mse_loss = 0.0
         val_batches = torch.tensor(X_val.values, dtype=torch.float32).to(self.device)
@@ -55,10 +57,11 @@ class Trainer():
         print(f"Local RMSE (NN): {rmse_score}")
 
     def get_predictions_for_dataset(self, test_df, batch_size):
+
+        self.model.eval()
         
         all_preds = []
         batches = torch.tensor(test_df.values, dtype=torch.float32).to(self.device)
-        print(batches.shape)
 
         for i in range(0, test_df.shape[0] - batch_size, batch_size):
             batch = batches[i:i+batch_size]
@@ -68,10 +71,8 @@ class Trainer():
         # Get the last batch, adding padding
         last_batch = batches[-(batches.shape[0] % batch_size):]
         padding = torch.zeros((batch_size - last_batch.shape[0], last_batch.shape[1])).to(self.device)
-        print(last_batch.shape)
         last_batch = torch.cat([last_batch, padding], dim=0)
-        print(last_batch.shape)
-        preds = self.model(last_batch)[:batch_size - padding.shape[0]] 
+        preds = self.model(last_batch)[:batch_size - padding.shape[0]]
         all_preds.append(preds)
 
         # Concatenate all the predictions

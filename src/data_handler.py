@@ -76,7 +76,9 @@ class DataHandler:
         # Set targets
         Y = train.pm2_5
         test_df = test[X.columns]
-
+        test_df = test_df.apply(self.transform_columns, axis=0)
+        test_df.fillna(test_df.mean(), inplace=True) 
+        
         return X, Y, test_df
 
 

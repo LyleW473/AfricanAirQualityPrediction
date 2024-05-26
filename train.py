@@ -7,7 +7,8 @@ from src.train_utils import create_submission
 from src.trainer import Trainer
 
 def train():
-
+    
+    torch.manual_seed(2004)
     random_seed = 42
 
     # Load data and get splits
@@ -43,13 +44,13 @@ def train():
 
     # Get predictions on test set
     test_preds = model.predict(test_df)
-    create_submission(predictions=test_preds, test_set=test_dataset)
+    # create_submission(predictions=test_preds, test_set=test_dataset)
 
     trainer = Trainer(device=torch.device("cuda" if torch.cuda.is_available() else "cpu"))
-    trainer.train(X_train, Y_train, batch_size=32, total_epochs=10)
+    trainer.train(X_train, Y_train, batch_size=32, total_epochs=1)
     trainer.evaluate(X_val, Y_val, batch_size=32)
     test_preds_2 = trainer.get_predictions_for_dataset(test_df, batch_size=32)
-    print(test_preds.shape, test_preds_2.shape, type(test_preds), type(test_preds_2), type(test_dataset))
+    print(test_preds.shape, test_preds_2.shape, test_dataset.shape, type(test_preds), type(test_preds_2), type(test_dataset))
     create_submission(predictions=test_preds_2, test_set=test_dataset)
 
 if __name__ == "__main__":
