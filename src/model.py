@@ -8,7 +8,7 @@ class Model(nn.Module):
                                     nn.Linear(74, 48),
                                     nn.BatchNorm1d(48),
                                     nn.ReLU(),
-                                    nn.Dropout(p=0.25)
+                                    nn.Dropout(p=0.4)
                                     )
         self.downsample1 = nn.Sequential(
                                         nn.Linear(74, 48),
@@ -18,7 +18,7 @@ class Model(nn.Module):
                                     nn.Linear(48, 24),
                                     nn.BatchNorm1d(24),
                                     nn.ReLU(),
-                                    nn.Dropout(p=0.25)
+                                    nn.Dropout(p=0.4)
                                     )
         self.downsample2 = nn.Sequential(
                                         nn.Linear(48, 24),
@@ -28,7 +28,7 @@ class Model(nn.Module):
                                     nn.Linear(24, 12),
                                     nn.BatchNorm1d(12),
                                     nn.ReLU(),
-                                    nn.Dropout(p=0.25)
+                                    nn.Dropout(p=0.4)
                                     )
         self.downsample3 = nn.Sequential(
                                         nn.Linear(24, 12),

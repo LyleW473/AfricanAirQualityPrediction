@@ -68,17 +68,17 @@ class DataHandler:
         # Select X and Y features for modelling
         X = train_num_df.drop("pm2_5", axis = 1)
 
-        # Transform columns
+        # Replace NaN values
+        X.interpolate(method="linear", inplace=True)
         X = X.apply(self.transform_columns, axis=0)
-
-        # Replace NaN values,
-        X.fillna(X.mean(), inplace=True)
+        X.fillna(X.median(), inplace=True) # Median because of outliers
 
         # Set targets
         Y = train.pm2_5
         test_df = test[X.columns]
+        test_df.interpolate(method="linear", inplace=True)
         test_df = test_df.apply(self.transform_columns, axis=0)
-        test_df.fillna(test_df.mean(), inplace=True) 
+        test_df.fillna(test_df.median(), inplace=True) # Median because of outliers
 
         return X, Y, test_df
 
