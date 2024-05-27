@@ -63,6 +63,8 @@ def train():
     train_inputs, train_targets = data_handler.get_batches(X=X_train, Y=Y_train, device=trainer.device, batch_size=BATCH_SIZE)
     val_inputs, val_targets = data_handler.get_batches(X=X_val, Y=Y_val, device=trainer.device, batch_size=BATCH_SIZE)
 
+    print(train_inputs.shape, train_targets.shape, val_inputs.shape, val_targets.shape)
+
     # Train model, validating after each epoch
     trainer.execute(
                     train_inputs=train_inputs,
