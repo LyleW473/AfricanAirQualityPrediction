@@ -55,7 +55,6 @@ def train():
 
     trainer = Trainer(
                     device=DEVICE,
-                    learning_rate=0.0005,
                     generator=g,
                     )
     print(X_train.shape, Y_train.shape, X_val.shape, Y_val.shape)

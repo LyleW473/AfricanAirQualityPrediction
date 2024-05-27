@@ -1,18 +1,17 @@
 import torch
 import os
-from .model import Model
 from .config import SAVE_INTERVAL, STATS_TRACK_INTERVAL
+from .model_manager import ModelManager
 
 class Trainer():
 
-    def __init__(self, learning_rate, device, generator):
+    def __init__(self, device, generator):
         self.generator = generator
         self.device = device
-        self.initialise_model(learning_rate=learning_rate, device=device)
 
-    def initialise_model(self, learning_rate, device):
-        self.model = Model().to(device)
-        self.optimiser = torch.optim.AdamW(self.model.parameters(), lr=learning_rate)
+        # Initialise model
+        self.model_manager = ModelManager(device=device)
+        self.config, self.model, self.optimiser, self.hyperparams, self.checkpoint_directory = self.model_manager.initialise_model()
 
     def train(self, all_inputs, all_targets, losses_list):
         self.model.train()
@@ -91,54 +90,40 @@ class Trainer():
 
         train_running_mse_loss = 0.0
         val_running_mse_loss = 0.0
-
-        train_losses = []
-        val_losses = []
-
-        for epoch in range(total_epochs):
+    
+        for _ in range(total_epochs):
             train_running_mse_loss += self.train(
                                                 all_inputs=train_inputs,
                                                 all_targets=train_targets,
-                                                losses_list=train_losses
+                                                losses_list=self.config["stats"]["train_losses"]
                                                 )
             val_running_mse_loss += self.evaluate(
                                         all_inputs=val_inputs,
                                         all_targets=val_targets,
-                                        losses_list=val_losses
+                                        losses_list=self.config["stats"]["val_losses"]
                                         )
             
             # Shuffle batches
             random_indexes = torch.randperm(train_inputs.shape[0], device=self.device, generator=self.generator)
             train_inputs = train_inputs[random_indexes]
             train_targets = train_targets[random_indexes]
-            
+
             # Display stats
-            if epoch % STATS_TRACK_INTERVAL == 0:
-                train_mse_loss_running = train_running_mse_loss / len(train_losses)
-                val_mse_loss_running = val_running_mse_loss / len(val_losses)
+            if self.config["misc"]["current_epoch"] % STATS_TRACK_INTERVAL == 0:
+                train_mse_loss_running = train_running_mse_loss / len(self.config["stats"]["train_losses"])
+                val_mse_loss_running = val_running_mse_loss / len(self.config["stats"]["val_losses"])
                 train_rmse_loss_running = train_mse_loss_running ** 0.5
                 val_rmse_loss_running = val_mse_loss_running ** 0.5
 
-                print(f"Epoch: {epoch + 1}/{total_epochs} | T_MSE: {train_mse_loss_running} | T_RMSE: {train_rmse_loss_running} | V_MSE: {val_mse_loss_running} | V_RMSE: {val_rmse_loss_running}")
+                print(f"Epoch: {self.config["misc"]["current_epoch"]}/{total_epochs} | T_MSE: {train_mse_loss_running} | T_RMSE: {train_rmse_loss_running} | V_MSE: {val_mse_loss_running} | V_RMSE: {val_rmse_loss_running}")
             
             # Save model
-            if epoch % SAVE_INTERVAL == 0:
-                self.save_model(train_losses, val_losses)
+            if self.config["misc"]["current_epoch"] % SAVE_INTERVAL == 0 and self.config["misc"]["current_epoch"] != 0:
+                self.save_model()
 
-    def save_model(self, train_losses, val_losses):
+            # Update epoch
+            self.config["misc"]["current_epoch"] += 1
 
-        checkpoint = {
-                    "model": {
-                            "model_state_dict": self.model.state_dict(),
-                            "optimiser_state_dict": self.optimiser.state_dict()
-                            },
-                    "stats":
-                            {
-                            "train_losses": train_losses,
-                            "val_losses": val_losses
-                            }
-                    }
-        if not os.path.exists("model_checkpoints"):
-            os.makedirs("model_checkpoints")
-        model_number = len(os.listdir("model_checkpoints"))
-        torch.save(checkpoint, f"model_checkpoints/model_{model_number}.pt")
+
+    def save_model(self):
+        torch.save(self.config, f"{self.checkpoint_directory}/{self.config["misc"]["current_epoch"]}.pt") 
