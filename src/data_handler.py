@@ -1,11 +1,13 @@
 from pathlib import Path
 import pandas as pd
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import root_mean_squared_error
 from sklearn.model_selection import train_test_split, KFold
 from matplotlib import pyplot as plt
 import seaborn as sns
 from .data_visualiser import DataVisualiser
 import torch
+from lightgbm import LGBMRegressor
+import numpy as np
 
 class DataHandler:
     def __init__(self):
@@ -70,6 +72,47 @@ class DataHandler:
         test_dataset["day"] = pd.to_datetime(test_dataset["date"]).apply(lambda x: x.day)
         print(train_dataset["day"])
 
+    def _impute_values(self, dataset, feature_columns):
+
+        for column in dataset.columns:
+
+            # Impute missing values
+            if dataset[column].isna().sum() > 0:
+                dataset_copy = dataset.copy()
+                
+                train_data = dataset_copy[dataset_copy[column].notna()]
+                predict_data = dataset_copy[dataset_copy[column].isna()]
+
+                # Data used to train regression model
+                x_train = train_data[feature_columns]
+                y_train = train_data[column]
+
+                # Data used to get predictions
+                x_predict = predict_data[feature_columns]
+
+                # Fit model
+                model = LGBMRegressor(
+                        learning_rate=0.1, 
+                        n_estimators=100,
+
+                        # force_col_wise=True, # Set to True to use a column-wise tree construction
+                        max_depth= -1, # Maximum tree depth for base learners, -1 means no limit
+                        num_leaves=31, # Maximum number of leaves in one tree
+                        random_state=42,
+                        device="gpu",
+                        verbose=-1
+                        )
+                
+                model.fit(x_train, y_train)
+                preds = model.predict(x_predict) # Get predictions
+
+                # print(column, preds)
+                # print()
+
+                # Replace missing values
+                dataset.loc[dataset[column].isna(), column] = preds
+
+        print(dataset.isna().sum())
 
     def _process_data(self, train, test):
 
@@ -82,16 +125,18 @@ class DataHandler:
         # # Select X and Y features for modelling
         # X = train_num_df.drop("pm2_5", axis = 1)
         X = train_num_df
-
+ 
         # Replace NaN values
-        X.interpolate(method="linear", inplace=True) 
+        # X.interpolate(method="linear", inplace=True) 
+        self._impute_values(dataset=X, feature_columns = ["hour", "day", "month", "pm2_5"])
         X = X.apply(self.transform_columns, axis=0)
         X.fillna(X.median(), inplace=True) # Median because of outliers
 
         # Set targets
         Y = train_num_df["pm2_5"]
         test_df = test[[column for column in X.columns if column != "pm2_5"]]
-        test_df.interpolate(method="linear", inplace=True)
+        # test_df.interpolate(method="linear", inplace=True)
+        self._impute_values(dataset=test, feature_columns = ["hour", "day", "month"]) # pm2_5 is not in test dataset
         test_df = test_df.apply(self.transform_columns, axis=0)
         test_df.fillna(test_df.median(), inplace=True) # Median because of outliers
 

@@ -51,7 +51,7 @@ def train():
 
     # Get predictions on test set
     test_preds = model.predict(test_df)
-    # create_submission(predictions=test_preds, test_set=test_dataset)
+    create_submission(predictions=test_preds, test_set=test_dataset)
 
     trainer = Trainer(
                     device=DEVICE,
