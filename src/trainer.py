@@ -5,13 +5,19 @@ from .model_manager import ModelManager
 
 class Trainer():
 
-    def __init__(self, device, generator):
+    def __init__(self, device, generator, model_num=None, epoch_num=None):
         self.generator = generator
         self.device = device
-
+        
         # Initialise model
         self.model_manager = ModelManager(device=device)
-        self.config, self.model, self.optimiser, self.hyperparams, self.checkpoint_directory = self.model_manager.initialise_model()
+        if model_num is not None and epoch_num is not None:
+            self.config, self.model, self.optimiser, self.hyperparams, self.checkpoint_directory = self.model_manager.load_model(
+                                                                                                                                model_num=model_num, 
+                                                                                                                                epoch_num=epoch_num
+                                                                                                                                )
+        else:
+            self.config, self.model, self.optimiser, self.hyperparams, self.checkpoint_directory = self.model_manager.initialise_model()
 
     def train(self, all_inputs, all_targets, losses_list):
         self.model.train()
@@ -126,4 +132,8 @@ class Trainer():
 
 
     def save_model(self):
+        # Update config
+        self.config["model"]["model_state_dict"] = self.model.state_dict()
+        self.config["model"]["optimiser_state_dict"] = self.optimiser.state_dict()
+
         torch.save(self.config, f"{self.checkpoint_directory}/{self.config["misc"]["current_epoch"]}.pt") 
