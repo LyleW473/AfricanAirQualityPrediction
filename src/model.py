@@ -5,13 +5,13 @@ class Model(nn.Module):
         super(Model, self).__init__()
 
         self.layer1 = nn.Sequential(
-                                    nn.Linear(74, 48),
+                                    nn.Linear(75, 48),
                                     nn.BatchNorm1d(48),
                                     nn.ReLU(),
                                     nn.Dropout(p=0.4)
                                     )
         self.downsample1 = nn.Sequential(
-                                        nn.Linear(74, 48),
+                                        nn.Linear(75, 48),
                                         nn.BatchNorm1d(48)                            
                                         )
         self.layer2 = nn.Sequential(

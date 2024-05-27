@@ -59,8 +59,22 @@ class DataHandler:
         minimum = column.min()
         column = (column - minimum) / ((maximum - minimum)+ epsilon)
         return column
+    
+    def _add_time_features(self, train_dataset, test_dataset):
+        # Get features that are not numerical features
+        non_numerical_features = train_dataset.select_dtypes(exclude=["number"]).columns
+        print(non_numerical_features)
+
+        # Create a new column for days
+        train_dataset["day"] = pd.to_datetime(train_dataset["date"]).apply(lambda x: x.day)
+        test_dataset["day"] = pd.to_datetime(test_dataset["date"]).apply(lambda x: x.day)
+        print(train_dataset["day"])
+
 
     def _process_data(self, train, test):
+
+        self._add_time_features(train_dataset=train, test_dataset=test)
+        print(train.columns)
 
         # Select only numerical features
         train_num_df = train.select_dtypes(include=['number'])
