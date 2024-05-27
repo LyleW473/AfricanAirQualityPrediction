@@ -2,8 +2,8 @@ import torch
 import matplotlib.pyplot as plt
 
 
-model_num = 17
-epoch_num = 1000
+model_num = 25
+epoch_num = 5000
 checkpoint = torch.load(f"model_checkpoints/{model_num}/{epoch_num}.pt")
 
 train_losses = torch.tensor(checkpoint["stats"]["train_losses"])

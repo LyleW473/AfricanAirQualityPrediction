@@ -46,8 +46,12 @@ class Model(nn.Module):
         return self.layer4(x)
     
     def _init_weights(self):
-        for layer in [self.layer1, self.layer2, self.layer3, self.layer4]:
-            if isinstance(layer, nn.Linear):
-                nn.init.kaiming_normal_(layer.weight, mode="fan_in", nonlinearity="relu")
-                if layer.bias is not None:
-                    nn.init.constant_(layer.bias, 0)
+        for module in [self.layer1, self.layer2, self.layer3, self.downsample1, self.downsample2, self.downsample3]:
+            for layer in module:
+                if isinstance(layer, nn.Linear):
+                    nn.init.kaiming_normal_(layer.weight, mode="fan_in", nonlinearity="relu")
+                    if layer.bias is not None:
+                        nn.init.constant_(layer.bias, 0)
+
+        nn.init.normal_(self.layer4.weight, mean=0.0, std=0.01)
+        nn.init.constant_(self.layer4.bias, 0)

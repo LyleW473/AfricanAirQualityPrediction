@@ -5,7 +5,7 @@ from lightgbm import LGBMRegressor
 from sklearn.metrics import root_mean_squared_error
 from src.train_utils import create_submission
 from src.trainer import Trainer
-from src.config import BATCH_SIZE, TOTAL_EPOCHS
+from src.config import CONFIG
 
 def train():
     
@@ -30,14 +30,14 @@ def train():
     trainer = Trainer(
                     device=DEVICE,
                     generator=g,
-                    model_num=0,
+                    model_num=18,
                     epoch_num=1000
                     )
     print(X_train.shape, Y_train.shape, X_val.shape, Y_val.shape)
 
     # Get data in PyTorch format
-    train_inputs, train_targets = data_handler.get_batches(X=X_train, Y=Y_train, device=trainer.device, batch_size=BATCH_SIZE)
-    val_inputs, val_targets = data_handler.get_batches(X=X_val, Y=Y_val, device=trainer.device, batch_size=BATCH_SIZE)
+    train_inputs, train_targets = data_handler.get_batches(X=X_train, Y=Y_train, device=trainer.device, batch_size=CONFIG["hyperparameters"]["batch_size"])
+    val_inputs, val_targets = data_handler.get_batches(X=X_val, Y=Y_val, device=trainer.device, batch_size=CONFIG["hyperparameters"]["batch_size"])
 
     print(train_inputs.shape, train_targets.shape, val_inputs.shape, val_targets.shape)
     
