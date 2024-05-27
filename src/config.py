@@ -3,8 +3,6 @@ import torch
 STATS_TRACK_INTERVAL = 1
 SAVE_INTERVAL = 100
 
-BATCH_SIZE = 64
-TOTAL_EPOCHS = 2000
 
 CONFIG = {
             "model": {
@@ -13,9 +11,9 @@ CONFIG = {
                     "optimiser": torch.optim.AdamW,
                     },
             "hyperparameters": {
-                                "batch_size": 64,
+                                "batch_size": 16,
                                 "learning_rate": 0.0005,
-                                "num_epochs": 10000,
+                                "num_epochs": 1000,
                                 },
             "stats": {
                     "train_losses": [],
