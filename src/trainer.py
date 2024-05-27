@@ -5,7 +5,8 @@ from .config import SAVE_INTERVAL, STATS_TRACK_INTERVAL
 
 class Trainer():
 
-    def __init__(self, learning_rate, device):
+    def __init__(self, learning_rate, device, generator):
+        self.generator = generator
         self.device = device
         self.initialise_model(learning_rate=learning_rate, device=device)
 
@@ -106,8 +107,13 @@ class Trainer():
                                         losses_list=val_losses
                                         )
             
+            # Shuffle batches
+            random_indexes = torch.randperm(train_inputs.shape[0], device=self.device, generator=self.generator)
+            train_inputs = train_inputs[random_indexes]
+            train_targets = train_targets[random_indexes]
+            
+            # Display stats
             if epoch % STATS_TRACK_INTERVAL == 0:
-                # Display stats
                 train_mse_loss_running = train_running_mse_loss / len(train_losses)
                 val_mse_loss_running = val_running_mse_loss / len(val_losses)
                 train_rmse_loss_running = train_mse_loss_running ** 0.5
@@ -115,6 +121,7 @@ class Trainer():
 
                 print(f"Epoch: {epoch + 1}/{total_epochs} | T_MSE: {train_mse_loss_running} | T_RMSE: {train_rmse_loss_running} | V_MSE: {val_mse_loss_running} | V_RMSE: {val_rmse_loss_running}")
             
+            # Save model
             if epoch % SAVE_INTERVAL == 0:
                 self.save_model(train_losses, val_losses)
 

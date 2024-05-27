@@ -5,10 +5,17 @@ from lightgbm import LGBMRegressor
 from sklearn.metrics import root_mean_squared_error
 from src.train_utils import create_submission
 from src.trainer import Trainer
+from src.config import BATCH_SIZE, TOTAL_EPOCHS
 
 def train():
     
+
+    DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     torch.manual_seed(2004)
+    g = torch.Generator(device=DEVICE)
+    g.manual_seed(2004)
+
     random_seed = 42
 
     # Load data and get splits
@@ -46,12 +53,10 @@ def train():
     test_preds = model.predict(test_df)
     # create_submission(predictions=test_preds, test_set=test_dataset)
 
-    BATCH_SIZE = 128
-    TOTAL_EPOCHS = 10
-    DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     trainer = Trainer(
                     device=DEVICE,
-                    learning_rate=0.0005
+                    learning_rate=0.0005,
+                    generator=g,
                     )
     print(X_train.shape, Y_train.shape, X_val.shape, Y_val.shape)
 
