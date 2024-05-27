@@ -2,7 +2,7 @@ import torch
 import matplotlib.pyplot as plt
 
 
-model_num = 13
+model_num = 17
 epoch_num = 1000
 checkpoint = torch.load(f"model_checkpoints/{model_num}/{epoch_num}.pt")
 

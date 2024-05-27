@@ -27,9 +27,9 @@ def train():
                                                                     test_size=0.3, 
                                                                     random_state_seed=random_seed
                                                                     )
-    for column in X_train.columns:
-        print(column)
-        print(X_train[column])
+    # for column in X_train.columns:
+    #     print(column)
+    #     print(X_train[column])
 
     # Initialise + train model
     model = LGBMRegressor(

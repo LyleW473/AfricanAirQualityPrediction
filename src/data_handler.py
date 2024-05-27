@@ -65,17 +65,18 @@ class DataHandler:
         # Select only numerical features
         train_num_df = train.select_dtypes(include=['number'])
 
-        # Select X and Y features for modelling
-        X = train_num_df.drop("pm2_5", axis = 1)
+        # # Select X and Y features for modelling
+        # X = train_num_df.drop("pm2_5", axis = 1)
+        X = train_num_df
 
         # Replace NaN values
-        X.interpolate(method="linear", inplace=True)
+        X.interpolate(method="linear", inplace=True) 
         X = X.apply(self.transform_columns, axis=0)
         X.fillna(X.median(), inplace=True) # Median because of outliers
 
         # Set targets
-        Y = train.pm2_5
-        test_df = test[X.columns]
+        Y = train_num_df["pm2_5"]
+        test_df = test[[column for column in X.columns if column != "pm2_5"]]
         test_df.interpolate(method="linear", inplace=True)
         test_df = test_df.apply(self.transform_columns, axis=0)
         test_df.fillna(test_df.median(), inplace=True) # Median because of outliers
@@ -94,6 +95,17 @@ class DataHandler:
     
         # Split data
         X_train, X_val, Y_train, Y_val = train_test_split(train_x, train_y, test_size=test_size, random_state=random_state_seed)
+        
+        print(X_train.shape, type(X_train), Y_train.shape)
+
+        # Remove outliers (temp)
+        condition = X_train["pm2_5"] < 150
+        X_train = X_train[condition]
+        Y_train = Y_train[condition]
+        print(X_train.shape, Y_train.shape)
+        
+        X_train = X_train.drop("pm2_5", axis=1)
+        X_val = X_val.drop("pm2_5", axis=1)
 
         return X_train, X_val, Y_train, Y_val, test_df
     
