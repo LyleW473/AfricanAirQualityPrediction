@@ -93,8 +93,6 @@ class DataHandler:
 
     def _add_distance_features(self, dataset):
 
-        print(dataset.columns)
-
         all_sites = dataset[["site_id", "site_latitude", "site_longitude"]].drop_duplicates()
         
         # Add haversine distance
@@ -106,23 +104,14 @@ class DataHandler:
                 haversine_distance = self._apply_haversine(latitude1=lat1, longitude1=lon1, latitude2=lat2, longitude2=lon2)
                 dist_df.loc[site1, site2] = haversine_distance
 
-        print(dist_df)
-
         # Convert the entire dataframe to float32 (otherwise it will be object type)
         dist_df = dist_df.astype("float32")
-        print(dist_df.dtypes)
 
         # Rename columns
         dist_df.columns = [f"distance_to_site_{i}" for i in range(len(dist_df.columns))]
-        print(dist_df)
-        
+
         # Merge distance features
-        print(dataset.shape)
         dataset = pd.merge(dataset, dist_df, left_on="site_id", right_index=True, how="left") # Merge on site_id 
-        print("------------")
-        print(dataset.shape)
-        print(dataset)
-        print()
         return dataset
 
     def _impute_values(self, dataset, feature_columns, num_iterations):
