@@ -40,7 +40,7 @@ def train():
                         max_depth= -1, # Maximum tree depth for base learners, -1 means no limit
                         num_leaves=31, # Maximum number of leaves in one tree
                         random_state=random_seed,
-                        device="gpu"
+                        # device="gpu" # Note: Will cause reproducibility issues when set to "gpu"
                         )
     model.fit(X_train, Y_train)
 

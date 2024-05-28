@@ -7,6 +7,7 @@ import seaborn as sns
 from .data_visualiser import DataVisualiser
 import torch
 from lightgbm import LGBMRegressor
+from sklearn.tree import DecisionTreeRegressor
 import numpy as np
 
 class DataHandler:
@@ -72,47 +73,40 @@ class DataHandler:
         test_dataset["day"] = pd.to_datetime(test_dataset["date"]).apply(lambda x: x.day)
         print(train_dataset["day"])
 
-    def _impute_values(self, dataset, feature_columns):
+    def _impute_values(self, dataset, feature_columns, num_iterations):
 
-        for column in dataset.columns:
+        for i in range(num_iterations):
+            for column in dataset.columns:
 
-            # Impute missing values
-            if dataset[column].isna().sum() > 0:
-                dataset_copy = dataset.copy()
-                
-                train_data = dataset_copy[dataset_copy[column].notna()]
-                predict_data = dataset_copy[dataset_copy[column].isna()]
+                # Impute missing values
+                if dataset[column].isna().sum() > 0:
+                    
+                    train_data = dataset[dataset[column].notna()]
+                    predict_data = dataset[dataset[column].isna()]
 
-                # Data used to train regression model
-                x_train = train_data[feature_columns]
-                y_train = train_data[column]
+                    # Data used to train regression model
+                    x_train = train_data[feature_columns]
+                    y_train = train_data[column]
 
-                # Data used to get predictions
-                x_predict = predict_data[feature_columns]
+                    # Data used to get predictions
+                    x_predict = predict_data[feature_columns]
 
-                # Fit model
-                model = LGBMRegressor(
-                        learning_rate=0.1, 
-                        n_estimators=100,
+                    # Fit model
+                    model = DecisionTreeRegressor(
+                                                criterion="squared_error",
+                                                random_state=42,
+                                                )
+                    
+                    model.fit(x_train, y_train)
+                    preds = model.predict(x_predict) # Get predictions
 
-                        # force_col_wise=True, # Set to True to use a column-wise tree construction
-                        max_depth= -1, # Maximum tree depth for base learners, -1 means no limit
-                        num_leaves=31, # Maximum number of leaves in one tree
-                        random_state=42,
-                        device="gpu",
-                        verbose=-1
-                        )
-                
-                model.fit(x_train, y_train)
-                preds = model.predict(x_predict) # Get predictions
+                    # print(column, preds)
+                    # print()
 
-                # print(column, preds)
-                # print()
+                    # Replace missing values
+                    dataset.loc[dataset[column].isna(), column] = preds
 
-                # Replace missing values
-                dataset.loc[dataset[column].isna(), column] = preds
-
-        print(dataset.isna().sum())
+        # print(dataset.isna().sum())
 
     def _process_data(self, train, test):
 
@@ -128,7 +122,7 @@ class DataHandler:
  
         # Replace NaN values
         # X.interpolate(method="linear", inplace=True) 
-        self._impute_values(dataset=X, feature_columns = ["hour", "day", "month", "pm2_5"])
+        self._impute_values(dataset=X, feature_columns = ["hour", "day", "month", "pm2_5"], num_iterations=100)
         X = X.apply(self.transform_columns, axis=0)
         X.fillna(X.median(), inplace=True) # Median because of outliers
 
@@ -136,7 +130,7 @@ class DataHandler:
         Y = train_num_df["pm2_5"]
         test_df = test[[column for column in X.columns if column != "pm2_5"]]
         # test_df.interpolate(method="linear", inplace=True)
-        self._impute_values(dataset=test, feature_columns = ["hour", "day", "month"]) # pm2_5 is not in test dataset
+        self._impute_values(dataset=test, feature_columns = ["hour", "day", "month"], num_iterations=100) # pm2_5 is not in test dataset
         test_df = test_df.apply(self.transform_columns, axis=0)
         test_df.fillna(test_df.median(), inplace=True) # Median because of outliers
 
