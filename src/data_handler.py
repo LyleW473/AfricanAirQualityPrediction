@@ -10,16 +10,21 @@ from lightgbm import LGBMRegressor
 from sklearn.tree import DecisionTreeRegressor
 import numpy as np
 import math
+from .outlier_detector import OutlierDetector
 
 class DataHandler:
     def __init__(self):
         self.data_visualiser = DataVisualiser()
+        self.outlier_detector = OutlierDetector()
 
     def load_data(self):
         DATA_PATH = Path('')
         train = pd.read_csv(DATA_PATH / 'Train.csv')
         test = pd.read_csv(DATA_PATH / 'Test.csv')
 
+        # Sort data by date for rolling windows + other time-based operations
+        train = train.sort_values(by="date")
+        
         return train, test
     
     def transform_columns(self, column):
@@ -150,6 +155,9 @@ class DataHandler:
         # print(dataset.isna().sum())
 
     def _process_data(self, train, test):
+
+        # Handle outliers (See outlier_detector.py for more details)
+        train = self.outlier_detector.handle_outliers(train=train, use_median=True, base_window_size=10)
 
         # Add time features
         self._add_time_features(train_dataset=train, test_dataset=test)
