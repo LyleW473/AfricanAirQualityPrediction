@@ -41,6 +41,7 @@ def train():
                         num_leaves=31, # Maximum number of leaves in one tree
                         random_state=random_seed,
                         # device="gpu" # Note: Will cause reproducibility issues when set to "gpu"
+                        num_iterations=1000,
                         )
     model.fit(X_train, Y_train)
 
