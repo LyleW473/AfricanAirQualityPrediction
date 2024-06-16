@@ -7,7 +7,7 @@ from src.train_utils import create_submission
 from src.trainer import Trainer
 from src.config import CONFIG
 
-def train():
+def train(train_custom_model=False):
     
 
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -54,33 +54,32 @@ def train():
     test_preds = model.predict(test_df)
     create_submission(predictions=test_preds, test_set=test_dataset)
 
-    trainer = Trainer(
-                    device=DEVICE,
-                    generator=g,
-                    )
-    print(X_train.shape, Y_train.shape, X_val.shape, Y_val.shape)
+    # CUSTOM MODEL
+    if train_custom_model:
+        trainer = Trainer(
+                        device=DEVICE,
+                        generator=g,
+                        )
+        print(X_train.shape, Y_train.shape, X_val.shape, Y_val.shape)
 
-    # Get data in PyTorch format
-    train_inputs, train_targets = data_handler.get_batches(X=X_train, Y=Y_train, device=trainer.device, batch_size=CONFIG["hyperparameters"]["batch_size"])
-    val_inputs, val_targets = data_handler.get_batches(X=X_val, Y=Y_val, device=trainer.device, batch_size=CONFIG["hyperparameters"]["batch_size"])
+        # Get data in PyTorch format
+        train_inputs, train_targets = data_handler.get_batches(X=X_train, Y=Y_train, device=trainer.device, batch_size=CONFIG["hyperparameters"]["batch_size"])
+        val_inputs, val_targets = data_handler.get_batches(X=X_val, Y=Y_val, device=trainer.device, batch_size=CONFIG["hyperparameters"]["batch_size"])
 
-    print(train_inputs.shape, train_targets.shape, val_inputs.shape, val_targets.shape)
+        print(train_inputs.shape, train_targets.shape, val_inputs.shape, val_targets.shape)
 
-    # Train model, validating after each epoch
-    trainer.execute(
-                    train_inputs=train_inputs,
-                    train_targets=train_targets,
-                    val_inputs=val_inputs,
-                    val_targets=val_targets,
-                    total_epochs=CONFIG["hyperparameters"]["num_epochs"],
-                    )
-    
-    # Final evaluation
-    trainer.evaluate(all_inputs=val_inputs, all_targets=val_targets, losses_list = [], verbose=True)
+        # Train model, validating after each epoch
+        trainer.execute(
+                        train_inputs=train_inputs,
+                        train_targets=train_targets,
+                        val_inputs=val_inputs,
+                        val_targets=val_targets,
+                        total_epochs=CONFIG["hyperparameters"]["num_epochs"],
+                        )
+        
+        # Final evaluation
+        trainer.evaluate(all_inputs=val_inputs, all_targets=val_targets, losses_list = [], verbose=True)
 
-    test_preds_2 = trainer.get_predictions_for_dataset(test_df, batch_size=CONFIG["hyperparameters"]["batch_size"])
-    print(test_preds.shape, test_preds_2.shape, test_dataset.shape, type(test_preds), type(test_preds_2), type(test_dataset))
-    create_submission(predictions=test_preds_2, test_set=test_dataset)
-
-if __name__ == "__main__":
-    train()
+        test_preds_2 = trainer.get_predictions_for_dataset(test_df, batch_size=CONFIG["hyperparameters"]["batch_size"])
+        print(test_preds.shape, test_preds_2.shape, test_dataset.shape, type(test_preds), type(test_preds_2), type(test_dataset))
+        create_submission(predictions=test_preds_2, test_set=test_dataset)
